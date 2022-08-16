@@ -1,20 +1,39 @@
 import { View, Text, Image } from 'react-native';
-import React, { useLayoutEffect } from 'react' 
+import React, { useEffect, useLayoutEffect, useState } from 'react' 
 import { useNavigation } from '@react-navigation/native'; 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronDownIcon, UserIcon, SearchIcon, AdjustmentsIcon } from "react-native-heroicons/outline";
 import { ScrollView, TextInput } from 'react-native-web';
 import Categories from '../components/categories';
 import FeaturedRow from '../components/FeaturedRow';
+import SanityClient from '../sanity';
 
 const HomeScreen = () => {
     const navigation = useNavigation();
+    const [featuredCategories,setFeaturedCategories]=useState([])
 
     useLayoutEffect(() => {
       navigation.setOptions({
         headerShown: false,
       });
     }, []);
+
+    useEffect(()=>{
+      SanityClient.fetch(`
+
+      *[_type == "featured"]{
+        ...,
+        restaurants[]->{
+        ...,
+        dishes[]->
+        }
+        }`)
+        .then(data =>{
+  setFeaturedCategories(data)
+})
+
+    },[])
+    // console.log(featuredCategories) for checking
 
   return (
     <SafeAreaView className='bg-white pt-5'>
@@ -59,27 +78,32 @@ const HomeScreen = () => {
         >
           {/* Categories */}
           <Categories/>
+
           {/* Featured Rows */}
+          
+          {featuredCategories?.map((category) => (
           <FeaturedRow
-          id='123'
-          title='Featured'
-          description='Paid placements from our partners'
+          key={category._id}
+          id={category._id}
+          title={category.name}
+          description={category.short_description}
           
           />
+          ))}
           {/* Tasty Discounts */}
-          <FeaturedRow
+          {/* <FeaturedRow
           id='1234'
           title='Tasty Discounts'
           description="Everyone's been enjoying these juicy discounts!"
           
-          />
+          /> */}
           {/* Offers near you */}
-          <FeaturedRow
+          {/* <FeaturedRow
           id='12345'
           title='Offers near you!'
           description='Why not support your local restaurant tonight!'
           
-          />
+          /> */}
 
         </ScrollView>
      
