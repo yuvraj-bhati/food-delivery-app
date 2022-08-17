@@ -1,10 +1,36 @@
 import { View, Text } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { ArrowRightIcon } from 'react-native-heroicons/outline'
 import { ScrollView } from 'react-native-web'
 import RestaurantCard from './RestaurantCard'
+import SanityClient from '../sanity'
 
 const FeaturedRow = ({id, title, description}) => {
+  const [restaurants, setRestaurants]=useState([]);
+
+    useEffect(()=>{
+      SanityClient.fetch(`
+      *[_type == "featured" && _id == $id ]{
+                    ...,
+            restaurants[]->{
+            ...,
+            dishes[]->,
+            type->{
+            name
+            }
+            },
+            }[0]
+
+      `,{id}
+      )
+      .then((data)=> {
+        setRestaurants(data?.restaurants); 
+      });
+    },[id])
+
+    // console.log(restaurants);
+
+
   return (
     <View>
     <View className='mt-4 flex-row items-center justify-between px-4'>
@@ -21,43 +47,25 @@ const FeaturedRow = ({id, title, description}) => {
     showsHorizontalScrollIndicator={false}
     className='pt-4'
     >
+
+
+         {restaurants?.map((restaurant) => (
+          <RestaurantCard 
+          key={restaurant._id}
+          id={restaurant._id}
+          imgUrl={restaurant.image}
+          title={restaurant.name}
+          rating={restaurant.rating}
+          genre={restaurant.type?.name}
+          address={restaurant.address}
+          short_description={restaurant.short_description}
+          dishes={restaurant.dishes}
+          long={restaurant.long}
+          lat={restaurant.lat}
+          />
+          ))}
         {/* RestaurantsCards... */}
-        <RestaurantCard 
-        id={123}
-        imgUrl='https://cdn.britannica.com/50/80550-131-273A1906/Scoops-kinds-ice-cream.jpg'
-        title='Yo! Sushi'
-        rating={4.5}
-        genre='Japanese'
-        address='123 main st'
-        short_description='This is a test description'
-        dishes={[]}
-        long={20}
-        lat={0}
-        />
-        <RestaurantCard 
-        id={123}
-        imgUrl='https://cdn.britannica.com/50/80550-131-273A1906/Scoops-kinds-ice-cream.jpg'
-        title='Yo! Sushi'
-        rating={4.5}
-        genre='Japanese'
-        address='123 main st'
-        short_description='This is a test description'
-        dishes={[]}
-        long={20}
-        lat={0}
-        />
-        <RestaurantCard 
-        id={123}
-        imgUrl='https://cdn.britannica.com/50/80550-131-273A1906/Scoops-kinds-ice-cream.jpg'
-        title='Yo! Sushi'
-        rating={4.5}
-        genre='Japanese'
-        address='123 main st'
-        short_description='This is a test description'
-        dishes={[]}
-        long={20}
-        lat={0}
-        />
+        
     </ScrollView>
     </View>
   )
